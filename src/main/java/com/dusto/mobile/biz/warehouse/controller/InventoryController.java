@@ -1,0 +1,166 @@
+package com.dusto.mobile.biz.warehouse.controller;
+
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.alibaba.fastjson.JSON;
+import com.dusto.mobile.biz.usercenter.service.WarehouseService;
+import com.dusto.mobile.biz.warehouse.vo.req.BindingBox;
+import com.dusto.mobile.biz.warehouse.vo.req.CheckZpdrwhServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.req.InventoryDataServiceReq;
+import com.dusto.mobile.biz.warehouse.vo.req.Inventorytplist;
+import com.dusto.mobile.biz.warehouse.vo.req.Inventoryxhmlist;
+import com.dusto.mobile.biz.warehouse.vo.res.ZpdrwhRes;
+import com.dusto.mobile.common.Utils;
+import com.dusto.mobile.common.constant.DustoConstant;
+import com.dusto.mobile.common.constant.SAPContant;
+import com.dusto.mobile.common.sap.jco.RfcManager;
+import com.dusto.mobile.common.vo.BaseResponse;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
+import com.sap.conn.jco.JCoTable;
+
+/**
+ * 库存盘点
+ * 
+ * @author CAIW
+ *
+ */
+@Controller
+@RequestMapping("inventory")
+public class InventoryController {
+	private Logger logger = Logger.getLogger(InventoryController.class);
+
+	@Autowired
+	private WarehouseService warehouseService;
+
+	@ResponseBody
+	@RequestMapping(value = "/gettaskno", method = { RequestMethod.POST })
+	public ZpdrwhRes gettaskno(@RequestBody CheckZpdrwhServiceRequest req) {
+		logger.info("entry InventoryController:gettaskno, input parameters：" + JSON.toJSONString(req));
+		Long begin = new Date().getTime();
+		ZpdrwhRes res = new ZpdrwhRes();
+		String warehouseId = req.getWarehouseId();
+		int index = Utils.getIndexOfWarehouse(warehouseService, warehouseId);
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit InventoryController:gettaskno output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_GETTASKNUMB, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit InventoryController:gettaskno, output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		Long sapStart = new Date().getTime();
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", warehouseId);
+		input.setValue("LGPLA", req.getLgpla());
+		input.setValue("UNAME", req.getUname());
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		Long sapEnd = new Date().getTime();
+		logger.info("exit InventoryController:gettaskno output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",sap costs " + (sapEnd - sapStart) + " ms");
+
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			String zpdrwh = function.getExportParameterList().getString("ZPDRWH");
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+			res.setZpdrwh(zpdrwh);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		Long end = new Date().getTime();
+		logger.info("exit InventoryController:gettaskno output parameters:" + JSON.toJSONString(res) + ",service costs "
+				+ (end - begin) + " ms");
+		return res;
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "/commit", method = { RequestMethod.POST })
+	public BaseResponse Commit(@RequestBody InventoryDataServiceReq req) {
+		logger.info("entry InventoryController:Commit, input parameters：" + JSON.toJSONString(req));
+		Long begin = new Date().getTime();
+		BaseResponse res = new BaseResponse();
+		String warehouseId = req.getWarehouseId();
+		int index = Utils.getIndexOfWarehouse(warehouseService, warehouseId);
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit InventoryController:Commit,  output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_INVENTORY, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit InventoryController:Commit, output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		Long sapStart = new Date().getTime();
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", warehouseId);
+		input.setValue("LGPLA", req.getLgpla());
+		input.setValue("ZPDRWH", req.getZpdrwh());
+		input.setValue("UNAME", req.getUname());
+		JCoParameterList inputParam = function.getTableParameterList();
+
+		List<BindingBox> zpdxhlist = req.getZpdxhlist();
+		List<Inventorytplist> zpdtphlist = req.getZpdtphlist();
+		List<Inventoryxhmlist> zpdxhmlist = req.getZpdxhmlist();
+		if (zpdtphlist != null) {
+			JCoTable jcoTable = inputParam.getTable("ZPDTPH");
+			for (Inventorytplist lenum : zpdtphlist) {
+				jcoTable.appendRow();
+				jcoTable.setValue("LENUM", lenum.getLenum());
+			}
+			
+		} else if ((zpdxhlist != null) || (zpdxhmlist != null)) {
+			if (zpdxhlist != null) {
+				JCoTable jcoTable = inputParam.getTable("ZPDXH");
+				for (BindingBox zxh : zpdxhlist) {
+					jcoTable.appendRow();
+					jcoTable.setValue("ZXH", zxh.getZxh());
+				}
+			}
+			if (zpdxhmlist != null) {
+				JCoTable jcoTable1 = inputParam.getTable("ZPDXHM");
+				for (Inventoryxhmlist xhm : zpdxhmlist) {
+					jcoTable1.appendRow();
+					jcoTable1.setValue("MATNR", xhm.getMatnr());
+					jcoTable1.setValue("MENGE", xhm.getMenge());
+				}
+			}
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_PARAM_ERROR);
+			logger.info("exit InventoryController:Commit, output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		Long sapEnd = new Date().getTime();
+		logger.info("exit InventoryController:Commit output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",sap cost " + (sapEnd - sapStart) + " ms");
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		Long end = new Date().getTime();
+		logger.info("exit InboundController:binding output parameters:" + JSON.toJSONString(res) + ",service costs "
+				+ (end - begin) + " ms");
+		return res;
+	}
+}

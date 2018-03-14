@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dusto.mobile.biz.scheduler.dao.JobMapper">
+
+	<resultMap id="jobMap" type="com.dusto.mobile.biz.scheduler.vo.ScheduleJob"
+		autoMapping="true">
+	</resultMap>
+
+	<select id="getjob" resultType="com.dusto.mobile.biz.scheduler.vo.ScheduleJob">
+		select
+		jobId,jobName,jobGroup,jobStatus,cronExpression,className,jobDesc from
+		Dusto_job
+		where jobId = #{jobId}
+	</select>
+
+	<insert id="addjob" parameterType="com.dusto.mobile.biz.scheduler.vo.ScheduleJob"
+		useGeneratedKeys="true">
+		insert into Dusto_job
+		(jobName,jobGroup,jobStatus,cronExpression,className,jobDesc
+		) values
+		(#{jobName},#{jobGroup},#{jobStatus},#{cronExpression},#{className},#{jobDesc})
+	</insert>
+
+	<update id="updatejob" parameterType="com.dusto.mobile.biz.scheduler.vo.ScheduleJob">
+		update Dusto_job set
+		jobGroup = #{jobGroup},jobName = #{jobName},
+		jobStatus = #{jobStatus},cronExpression = #{cronExpression},
+		className = #{className}, jobDesc = #{jobDesc}
+		where jobId = #{jobId}
+	</update>
+
+	<update id="updateJobStatus">
+		update Dusto_job set jobStatus =
+		#{jobStatus} where jobId = #{jobId}
+	</update>
+
+	<delete id="deletejobByPrimaryKey">
+		delete from Dusto_job where jobId = #{jobId}
+	</delete>
+
+	<select id="loadjob" resultMap="jobMap">
+		select
+		jobId,jobName,jobGroup,jobStatus,cronExpression,className,jobDesc from
+		Dusto_job
+	</select>
+</mapper>

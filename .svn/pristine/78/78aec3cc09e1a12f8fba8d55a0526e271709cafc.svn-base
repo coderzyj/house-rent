@@ -1,0 +1,169 @@
+myApp.controller("UserController", function($scope, $http,$location) {
+//	$scope.users =[{id:1, userId:"000304343234", userName:'John', password:'555-1276',warehouse:"中央仓库",authority:"1111111"},
+//		{id:1, userId:"00030984384202", userName:'Kevin', password:'555-1236',warehouse:"武汉仓库",authority:"1111111"},
+//		{id:1, userId:"00083916477280", userName:'lan', password:'555-1272',warehouse:"中央仓库",authority:"1111111"},
+//		{id:1, userId:"00039381763309", userName:'Mike', password:'555-1274',warehouse:"中央仓库",authority:"1111111"},
+//		{id:1, userId:"000319376482232", userName:'Steven', password:'555-1203',warehouse:"广州仓库",authority:"1111111"},
+//		{id:1, userId:"00030984389361", userName:'Smith', password:'555-1888',warehouse:"中央仓库",authority:"1111111"}
+//		];
+	$scope.showEdit = true;
+	$scope.master = {}; 
+	$scope.loadData = function() {
+		var req = {
+				"offset" : 0,
+				"rows" : 10000
+		}
+		$http({
+			method : "post",
+			url : "../user/getUserList",
+			data : JSON.stringify(req),
+			cache : true
+		}).then(function(data) {
+			console.log(data.data.result);
+			$scope.users = data.data.result;
+			console.log("success!");
+		}).catch(function(data) {
+			console.log(data.data.errorMsg);
+			console.log("error");
+		});
+	};
+	$scope.addUser = function(){
+		if($scope.newId == undefined || $scope.newId == ""){
+			alert("请输入登录名!");
+			return;
+		}
+		if($scope.newName == undefined || $scope.newName == ""){
+			alert("请输入姓名!");
+			return;
+		}
+		if($scope.newPasswd == undefined || $scope.newPasswd == ""){
+			alert("请输入密码!");
+			return;
+		}
+			var url = "../user/insert";
+			var user = {
+					userId:$scope.newId,
+					userName:$scope.newName,
+					password:$scope.newPasswd
+			}
+			console.log(user);
+			$http({
+				method : "post",
+				url : url,
+				data : JSON.stringify(user),
+				cache : true
+			}).then(function(data) {
+				console.log(data);
+				console.log("success!");
+				alert("已经提交成功");
+				$scope.loadData();
+				$scope.newId="";
+				$scope.newName="";
+				$scope.newPasswd="";
+			}).catch(function(data) {
+				console.log(data);
+				console.log("error");
+				alert("提交失败");
+			});
+	};
+	$scope.userupdate = function(user) {
+		$http({
+   			method : "post",
+   			url : "../user/update",
+   			data:JSON.stringify(user),
+   			cache : true
+   		}).then(function(data) {
+   			console.log("success!");
+   			$scope.showEdit = true;
+//   			if(!$scope.$$phase){
+//   				$scope.$apply(function(){
+//   	   		        $scope.showEdit = true;
+//   	   		    });
+//   			}
+//   			
+   		}).catch(function(data) {
+//   			console.log(data.data);
+   			console.log("error");
+   		});
+		$scope.showEdit = true;
+	};
+	$scope.userdelete = function(id) {
+		$http({
+   			method : "get",
+   			url : "../user/delete/"+id,
+   			cache : true
+   		}).then(function(data) {
+   			console.log("success!");
+   			for(var i=0; i<$scope.users.length; i++){
+	        	 if($scope.users[i].userId == id){
+	        		 console.log($scope.users[i]); 
+	                 $scope.users.splice(i,1);  
+	        	 }
+	         }
+   		}).catch(function(data) {
+   			console.log(data);
+   			console.log("error");
+   		});
+	};
+	$scope.loadData();
+});
+myApp.directive("edituser",function(){
+  return{
+    restrict: 'AE',
+    require: 'ngModel',
+    link: function(scope,element,attrs,ngModel){
+       element.bind("click",function(){
+	       scope.$apply(function(){
+	         angular.copy(ngModel.$modelValue,scope.master);
+	         console.log(scope.master);
+	         scope.showEdit = false;
+	       });
+      });
+    }
+  }
+});
+
+myApp.directive("userupdate",function(){
+  return{
+    restrict: 'AE',
+    require: 'ngModel',
+    link: function(scope,element,attrs,ngModel){
+       element.bind("click",function(){
+    	   var user = ngModel.$modelValue;
+    	   scope.userupdate(user);
+    	   scope.showEdit = true;
+      });
+    }
+  }
+});
+
+myApp.directive("usercancel",function(){
+  return{
+    restrict: 'AE',
+    require: 'ngModel',
+    link: function(scope,element,attrs,ngModel){
+       element.bind("click",function(){
+	       scope.$apply(function(){
+	         angular.copy(scope.master,ngModel.$modelValue);
+	         console.log(ngModel.$modelValue);
+	         scope.showEdit = true;
+	       });
+      });
+    }
+  }
+});
+
+myApp.directive("userdelete",function(){
+  return{
+    restrict: 'AE',
+    require: 'ngModel',
+    link: function(scope,element,attrs,ngModel,http){
+       element.bind("click",function(){
+    	   var id = ngModel.$modelValue.userId;
+    	   scope.userdelete(id);
+       console.log(scope.users);
+      });
+    }
+  }
+
+});

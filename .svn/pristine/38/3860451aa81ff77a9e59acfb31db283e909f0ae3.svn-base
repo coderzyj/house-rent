@@ -1,0 +1,25 @@
+package com.dusto.mobile.common.constant;
+
+public class SAPContant {
+	public static final String SAP_FUNCTION_RES_SUCCESS = "S";
+	public static final String SAP_FUNCTION_RES_FAILED = "F";
+	
+	/**入库绑定**/
+	public static final String SAP_FUNCTION_BINDING = "ZWM006";
+	
+	/**入库取消绑定**/
+	public static final String SAP_FUNCTION_UNBINDING = "ZWM007";
+	
+	/**托盘上架**/
+	public static final String SAP_FUNCTION_GROUNDING = "ZWM021A";
+	
+	/**拆箱**/
+	public static final String SAP_FUNCTION_DEVANNING = "ZWM033";
+	
+	/**获取推荐仓位**/
+	public static final String SAP_FUNCTION_POSITION = "ZWM021";
+	
+	/**主数据同步**/
+	public static final String SAP_FUNCTION_MASTERDATA = "ZWM999";
+	public static final String SAP_FUNCTION_MASTERDATA_CONFIRM = "ZWM999A";
+}

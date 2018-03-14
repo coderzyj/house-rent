@@ -1,0 +1,16 @@
+##\u670d\u52a1\u5668
+jco.client.ashost = 192.168.17.8 
+#\u7cfb\u7edf\u7f16\u53f7
+jco.client.sysnr = 00
+#SAP \u5ba2\u6237\u7aef
+jco.client.client = 120
+#SAP\u7528\u6237\u540d 
+jco.client.user = OASERVICE
+#\u5bc6\u7801
+jco.client.passwd = oatest
+#\u767b\u5f55\u8bed\u8a00 
+jco.client.lang = zh
+#\u6700\u5927\u8fde\u63a5\u6570 
+jco.destination.pool_capacity = 3
+#\u6700\u5927\u8fde\u63a5\u7ebf\u7a0b
+jco.destination.peak_limit = 10

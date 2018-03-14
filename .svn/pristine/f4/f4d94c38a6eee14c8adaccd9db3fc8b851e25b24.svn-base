@@ -1,0 +1,10 @@
+package com.dusto.mobile.common.sap.test;
+
+public class Test {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		System.err.println(System.getProperty("java.library.path"));
+	}
+
+}

@@ -1,0 +1,90 @@
+stockcheck/check
+{    "warehouseId": "WH1",
+    "lgpla": "Z10-1",
+    "ztp": ""
+}
+1111111111
+123456789
+20170220001
+20170220002
+20170220003
+20170220004
+20170220005
+20170220006
+
+Inventory/gettaskno
+{    "warehouseId": "WH1",
+    "lgpla": "Z10-1",
+    "ztp": ""
+}
+
+
+{
+    "warehouseId": "WH1",
+    "lgpla": "Z10-1",
+    "zpdrwh": "WH00000004",
+    "uname": "zsdsd",
+    "zpdtphlist": null,
+    "zpdxhlist": [
+        {
+            "zxh": "1111111111"
+        },
+        {
+            "zxh": "123456789"
+        },
+        {
+            "zxh": "D5X1605   04#A06000001"
+        }
+    ]
+}
+
+{
+    "warehouseId": "WH1",
+    "lgpla": "Z10-1",
+    "zpdrwh": "WH00000003",
+    "uname": "zsdsd",
+    "zpdtphlist": [
+        {
+            "lenum": "1111111111"
+        },
+        {
+            "lenum": "123456789"
+        },
+        {
+            "lenum": "20170220001"
+        }
+    ],
+    "zpdxhlist": null
+}
+
+http://localhost:8080/DustoService/transfer/transferztp
+{
+    "warehouseId": "WH1",
+    "lgpla": "Z10-1",
+    "ztp": "P000000001",
+    "uname": "1001"
+}
+
+
+http://localhost:8080/DustoService/transfer/transferzxh
+{
+    "warehouseId": "WH1",
+    "ztp": "P100000008",
+    "ztpn": "P100000091",
+    "vlpla": "TEST13",
+    "nlpla": "TEST14",
+    "uname": "1001",
+    "zxhlist":[
+     {"zxh":"DW17C1018A160A06000001"}
+     ]
+}
+
+http://localhost:8080/DustoService/transfer/transfersm
+{
+    "warehouseId": "WH1",
+    "vlpla": "Z20-1",
+    "nlpla": "TEST10",
+    "matnr": "DW17C1728AA00220",
+    "menge":"2",
+    "uname":"1001"
+}

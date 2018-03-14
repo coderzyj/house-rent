@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dusto.mobile.biz.scheduler.dao.EnvMapper">
+
+	<resultMap id="envDataMap" type="com.dusto.mobile.biz.scheduler.vo.EnvVO"
+		autoMapping="true">
+	</resultMap>
+
+	<select id="getEnvdata" resultType="com.dusto.mobile.biz.scheduler.vo.EnvVO">
+		select
+		envKey,envValue,description
+		from Dusto_env
+		where envKey = #{envKey}
+	</select>
+
+	<insert id="addEnvdata" parameterType="com.dusto.mobile.biz.scheduler.vo.EnvVO"
+		useGeneratedKeys="true">
+		insert into Dusto_env
+		(envKey,envValue,description
+		) values
+		(#{envKey},#{envValue},#{color},#{zpeim},#{flg})
+	</insert>
+
+	<update id="updateEnvdata" parameterType="com.dusto.mobile.biz.scheduler.vo.EnvVO">
+		update
+		Dusto_env set envValue = #{envValue}, description = #{description}
+		where envKey = #{envKey}
+	</update>
+
+	<delete id="deleteEnvdataByPrimaryKey">
+		delete from Dusto_env where envKey = #{envKey}
+	</delete>
+
+	<update id="updateEnvdataValue">
+		update Dusto_env set envValue =
+		#{envValue} where envKey = #{envKey}
+
+	</update>
+
+	<select id="loadEnvdata" resultMap="envDataMap">
+		select envKey, envValue, description from Dusto_env
+	</select>
+</mapper>

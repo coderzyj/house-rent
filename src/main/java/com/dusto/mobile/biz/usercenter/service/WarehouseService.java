@@ -1,0 +1,18 @@
+package com.dusto.mobile.biz.usercenter.service;
+
+import java.util.List;
+
+import com.dusto.mobile.biz.usercenter.entity.Warehouse;
+
+public interface WarehouseService {
+
+	public int insert(Warehouse warehouse);
+
+	public List<Warehouse> findAllWarehouse();
+
+	public Warehouse selectByPrimaryKey(String warehouseId);
+
+	public Warehouse selectByWarehouseName(String warehouseName);
+	
+	public int deleteByPrimaryKey(String warehouseId);
+}

@@ -1,0 +1,77 @@
+myApp.controller("JobController", function($scope, $http,$location) {
+	$scope.loadData = function() {
+		$http({
+			method : "get",
+			url : "../job/loadData",
+			cache : true
+		}).then(function(data) {
+			console.log(data.data.result);
+			$scope.joblist = data.data.result;
+			console.log("success!");
+		}).catch(function(data) {
+			console.log(data.data.errorMsg);
+			console.log("error");
+		});
+	};
+	$scope.update = function(job) {
+
+	};
+	$scope.exec = function(job) {
+		$http({
+			method : "post",
+			url : "../job/startNow",
+			data : JSON.stringify(job),
+			cache : true
+		}).then(function(data) {
+			console.log(data);
+			console.log("success!");
+			alert("已经提交成功");
+			$location.path("/job");
+		}).catch(function(data) {
+			console.log(data);
+			console.log("error");
+			alert("提交失败");
+		});
+	};
+	$scope.start = function(job) {
+		var url = "../job/start";
+		$http({
+			method : "post",
+			url : url,
+			data : JSON.stringify(job),
+			cache : true
+		}).then(function(data) {
+			console.log(data);
+			console.log("success!");
+			alert("已经提交成功");
+			$scope.loadData();
+			$location.path("/job");
+		}).catch(function(data) {
+			console.log(data);
+			console.log("error");
+			alert("提交失败");
+		});
+	};
+	$scope.stop = function(job) {
+		var url = "../job/stop";
+		$http({
+			method : "post",
+			url : url,
+			data : JSON.stringify(job),
+			cache : true
+		}).then(function(data) {
+			console.log(data);
+			console.log("success!");
+			alert("已经提交成功");
+//			$location.path("/job");
+			$scope.loadData();
+		}).catch(function(data) {
+			console.log(data);
+			console.log("error");
+			alert("提交失败");
+		});
+	};
+//	$scope.joblist =[{"jobId":"1","jobName":"saptask_1","jobGroup":"masterdata","jobStatus":"1","cronExpression":"0 */1 * * * ?","className":"com.dusto.mobile.biz.scheduler.job.CustomScheduledJob","jobDesc":"主数据导入"}]
+	$scope.loadData();
+
+});

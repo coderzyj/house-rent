@@ -1,0 +1,50 @@
+package com.dusto.mobile.common.constant;
+
+public class SAPContant {
+	public static final String SAP_FUNCTION_RES_SUCCESS = "S";
+	public static final String SAP_FUNCTION_RES_FAILED = "F";
+
+	/** 入库绑定 **/
+	public static final String SAP_FUNCTION_BINDING = "ZWM006";
+
+	/** 入库取消绑定 **/
+	public static final String SAP_FUNCTION_UNBINDING = "ZWM007";
+
+	/** 托盘上架 **/
+	public static final String SAP_FUNCTION_GROUNDING = "ZWM021A";
+
+	/** 拆箱 **/
+	public static final String SAP_FUNCTION_DEVANNING = "ZWM033";
+
+	/** 获取推荐仓位 **/
+	public static final String SAP_FUNCTION_POSITION = "ZWM021";
+
+	/** 主数据同步 **/
+	public static final String SAP_FUNCTION_MASTERDATA = "ZWM999";
+	public static final String SAP_FUNCTION_MASTERDATA_CONFIRM = "ZWM999A";
+
+	/** 库存查询 **/
+	public static final String SAP_FUNCTION_STOCKCHECK = "ZWM020";
+
+	/** 装箱 **/
+	public static final String SAP_FUNCTION_PACKED = "ZWM031";
+	public static final String SAP_FUNCTION_CHECK_PACKED = "ZWM032A";
+	public static final String SAP_FUNCTION_CONFIRM_PACKED = "ZWM032B";
+
+	/** 库存盘点 **/
+	public static final String SAP_FUNCTION_GETTASKNUMB = "ZWM026";
+	public static final String SAP_FUNCTION_INVENTORY = "ZWM026A";
+	
+	/** 移库 **/
+	public static final String SAP_FUNCTION_TRANSFERTP = "ZWM023A";
+	public static final String SAP_FUNCTION_TRANSFERXH = "ZWM023B";
+	public static final String SAP_FUNCTION_TRANSFERSM = "ZWM023C";
+	
+	/** CDC拣货 **/
+	public static final String SAP_FUNCTION_CDC_PICK = "ZWM011";
+	/** CDC拣货到暂存区 **/
+	public static final String SAP_FUNCTION_CDC_PICK_TO_TEMP = "ZWM011A";
+	/** CDC暂存区到发货区 **/
+	public static final String SAP_FUNCTION_CDC_PICK_TO_DELIVERY = "ZWM011B";
+	
+}

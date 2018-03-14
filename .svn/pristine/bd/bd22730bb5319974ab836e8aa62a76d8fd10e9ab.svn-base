@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myapp">
+<head>
+<meta charset="UTF-8">
+<title>后台管理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="text/javascript" src="js/lib/jquery-3.1.1.min.js"></script>
+<script type="text/javascript" src="js/lib/angular.js"></script>
+<script type="text/javascript" src="js/lib/angular-route.js"></script>
+<script type="text/javascript" src="js/lib/angular-animate.min.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/user.js"></script>
+<script type="text/javascript" src="js/job.js"></script>
+<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+<link href="css/bootstrap/bootstrap-theme.min.css" rel="stylesheet">
+<link href="css/css.css" rel="stylesheet">
+</head>
+<body>
+ <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">大东</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#"></a></li>
+            <li><a href="#"></a></li>
+            <li><a href="#"></a></li>
+            <li><a href="http://www.cnblogs.com/drubber/p/5845014.html" target="_blank">Help</a></li>
+          </ul>
+         <!--  <form class="navbar-form navbar-right">
+            <input type="text" class="form-control" placeholder="Search...">
+          </form> -->
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar" ng-controller="MenuController">
+          <ul class="nav nav-sidebar">
+            <li class="active"><a href="#/">用户列表 <span class="sr-only">(current)</span></a></li>
+            <li><a href="#job">数据导入</a></li>
+            <li><a ng-click="goToImportData()">数据导入2</a></li>
+            <li><a href="#/job">数据导入</a></li>
+            <li><a href="#"></a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+          </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" ng-view>
+        
+        </div>
+      </div>
+    </div>
+</div>
+</body>
+</html>

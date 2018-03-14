@@ -1,0 +1,15 @@
+package com.dusto.mobile.biz.warehouse.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * 出库
+ * @author Kevin
+ *
+ */
+@Controller
+@RequestMapping("outbound")
+public class OutboundController {
+
+}

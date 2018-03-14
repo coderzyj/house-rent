@@ -1,0 +1,10 @@
+myApp.controller("UserController", function($scope) {
+//	$scope.userList = [{name:"张三"},{name:"王五"}];
+	$scope.userList = ["zhangsan","lisi"];
+	$scope.select= function(index){
+		$scope.active=index;
+	}
+	$scope.remove= function(index){
+		$scope.items.splice(index,1);
+	}
+});

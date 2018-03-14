@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dusto.mobile.biz.usercenter.dao.WarehouseMapper">
+
+	<resultMap id="warehouseMap"
+		type="com.dusto.mobile.biz.usercenter.entity.Warehouse" autoMapping="true">
+	</resultMap>
+	<select id="getWarehouse" resultType="com.dusto.mobile.biz.usercenter.entity.Warehouse">
+		select
+		warehouseId,warehouseName,warehouseType from
+		Dusto_warehouse
+		where warehouseId = #{warehouseId}
+	</select>
+
+	<insert id="addWarehouse" parameterType="com.dusto.mobile.biz.usercenter.entity.Warehouse">
+	insert into Dusto_warehouse
+	(warehouseId,warehouseName,warehouseType
+	) values
+	(#{warehouseId},#{warehouseName},#{warehouseType})
+	</insert>
+
+	<delete id="deleteWarehouseByPrimaryKey">
+		delete from Dusto_warehouse where warehouseId =
+		#{warehouseId}
+	</delete>
+
+	<select id="loadWarehouse" resultMap="warehouseMap">
+		select
+		warehouseId,warehouseName,warehouseType from
+		Dusto_warehouse
+	</select>
+</mapper>

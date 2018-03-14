@@ -1,0 +1,31 @@
+var myApp = angular.module('myapp', ['ngRoute', 'ngAnimate']);
+myApp.config(function($routeProvider) {
+    $routeProvider
+        // home page
+        .when('/', {
+            templateUrl: 'html/page-user.html',
+            controller: 'UserController'
+        })
+
+        // evn page
+        .when('/job', {
+            templateUrl: 'html/page-job.html',
+            controller: 'JobController'
+        })
+
+        // contact page
+        .when('/contact', {
+            templateUrl: 'html/page-contact.html',
+            controller: 'contactController'
+        })
+        .otherwise({
+            redirectTo : '/'
+        });
+
+});
+
+myApp.controller("MenuController",  ["$scope", "$location", function ($scope, $location) {
+	 $scope.goToImportData = function () {
+	  $location.path("/job")
+	 }
+	}]);

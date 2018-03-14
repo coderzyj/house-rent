@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dusto.mobile.biz.scheduler.dao.MasterDataMapper">
+
+	<resultMap id="masterDataMap" type="com.dusto.mobile.biz.scheduler.vo.MasterData"
+		autoMapping="true">
+	</resultMap>
+
+	<select id="getMasterdata" resultType="com.dusto.mobile.biz.scheduler.vo.MasterData">
+		select
+		zxh,matnr,color,zpeim,sapsys,flg,ztp
+		from Dusto_masterdata
+		where zxh = #{zxh}
+	</select>
+
+	<insert id="addMasterdata" parameterType="com.dusto.mobile.biz.scheduler.vo.MasterData"
+		useGeneratedKeys="true">
+		insert into Dusto_masterdata
+		(zxh,matnr,color,zpeim,sapsys,flg,ztp
+		) values
+		(#{zxh},#{matnr},#{color},#{zpeim},#{flg},#{ztp})
+	</insert>
+
+	<insert id="addMasterdataList" parameterType="java.util.List">
+		insert into Dusto_masterdata
+		(zxh,matnr,color,zpeim,sapsys,flg,ztp
+		) values
+		<foreach collection="list" index="index" item="masterData" 
+			separator="," >
+			(#{masterData.zxh},#{masterData.matnr},#{masterData.color},#{masterData.zpeim},#{masterData.sapsys},#{masterData.flg},#{masterData.ztp})
+		</foreach>
+	</insert>
+
+	<update id="updateMasterdata" parameterType="com.dusto.mobile.biz.scheduler.vo.MasterData">
+		update
+		Dusto_masterdata set
+		matnr = #{matnr}, color = #{color}, zpeim = #{zpeim}, sapsys = #{sapsys},flg = #{flg}, ztp = #{ztp}
+		where zxh =  #{zxh}
+	</update>
+
+	<delete id="deleteMasterdataByPrimaryKey">
+		delete from Dusto_masterdata where zxh = #{zxh}
+	</delete>
+
+	<update id="updateMasterdataFlag" parameterType="java.util.Map">
+		update Dusto_masterdata set flg = #{flg}, ztp = #{ztp}, sapsys = #{sapsys} where zxh IN
+		<foreach collection="zxhList" index="index" item="zxh" open="("
+			separator="," close=")">
+			#{zxh}
+		</foreach>
+
+	</update>
+	
+	<update id="updateMasterdataFlagByZTP">
+		update Dusto_masterdata set flg = #{flg} where ztp = #{ztp}
+	</update>
+
+	<select id="loadMasterdataByZtpAndFlg" resultMap="masterDataMap">
+		select
+		zxh,matnr,color,zpeim,sapsys,flg,ztp from
+		Dusto_masterdata where ztp = #{ztp} and flg =#{flg}
+	</select>
+	
+	<select id="findMasterdata" resultMap="masterDataMap" parameterType="java.util.List">
+		select
+		zxh,matnr,color,zpeim,sapsys,flg,ztp from
+		Dusto_masterdata  where zxh IN
+		<foreach collection="list" index="index" item="masterData" open="("
+			separator="," close=")">
+			#{masterData.zxh}
+		</foreach>
+	</select>
+	
+	<delete id="deleteMasterdata" parameterType="java.util.List">
+		delete from Dusto_masterdata  where zxh IN
+		<foreach collection="list" index="index" item="masterData" open="("
+			separator="," close=")">
+			#{masterData.zxh}
+		</foreach>
+	</delete>
+</mapper>

@@ -1,0 +1,235 @@
+package com.dusto.mobile.biz.scheduler.job;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.dusto.mobile.biz.scheduler.MySQLConn;
+import com.dusto.mobile.biz.scheduler.service.EnvService;
+import com.dusto.mobile.biz.scheduler.service.MasterDataService;
+import com.dusto.mobile.biz.scheduler.vo.MasterData;
+import com.dusto.mobile.common.constant.DustoConstant;
+import com.dusto.mobile.common.constant.SAPContant;
+import com.dusto.mobile.common.sap.jco.RfcManager;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
+import com.sap.conn.jco.JCoTable;
+
+@Component
+// @Controller
+public class CustomScheduledJob extends AbstractScheduledJob {
+
+	private static int MAX_ALLOWED_RECORDS = 10000;
+	private Logger logger = Logger.getLogger(CustomScheduledJob.class);
+
+	private static CustomScheduledJob jobUtil;
+
+	@Autowired
+	private MasterDataService masterDataService;
+
+	@Autowired
+	private EnvService envService;
+
+	@PostConstruct
+	public void init() {
+		jobUtil = this;
+		jobUtil.envService = this.envService;
+		jobUtil.masterDataService = this.masterDataService;
+	}
+
+	@Override
+	public void doScheduledJob() {
+		// TODO Auto-generated method stub
+		DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		logger.info(sdf.format(new Date()) + "*********doScheduledJob任务被执行");
+		// 每条SQL语句 要小于1万条。 因为默认max_allowed_packet配置是1M
+		// 主键有序排列+事务 + 有序
+
+		for (int index = 0; index < RfcManager.PROPERTIES_FILE.length; index++) {
+			String prefix = "" + index;
+			if (index == RfcManager.SAP_SYS_AFS) {
+				prefix = "AFS";
+				// } else if (index == RfcManager.SAP_SYS_RETAIL) {
+				// prefix = "RETAIL";
+			} else {
+				continue;
+			}
+			// EnvVO env = getFilter(prefix);
+			// String dateStr = "";
+			// String timeStr = "";
+			// if (env != null) {
+			// String datetime = env.getEnvValue();
+			// String[] datetimes = datetime.split("_");
+			// dateStr = datetimes[0];
+			// timeStr = datetimes[1];
+			// }
+			// MasterSAPRespVO vo = loadMasterData(dateStr,
+			// timeStr,index,prefix);
+			List<MasterData> list = loadMasterData(index, prefix);
+			List<MasterData> sList = insertMasterData(list);
+			addMasterData(sList, index);
+			// if (env != null) {
+			// updateEnvData(prefix,vo.getDate(), vo.getTime());
+			// } else {
+			// insertEnvData(prefix,vo.getDate(), vo.getTime());
+			// }
+		}
+	}
+
+	private List<MasterData> loadMasterData(int index, String sysName) {
+		Long begin = new Date().getTime();
+		List<MasterData> list = new ArrayList<MasterData>();
+		logger.info("start to call SAP function input parameters:index:" + index + ",sysName:" + sysName);
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_MASTERDATA, index);
+		if (function == null) {
+			logger.info("No function:" + SAPContant.SAP_FUNCTION_MASTERDATA);
+
+			return list;
+		}
+		JCoParameterList input = function.getImportParameterList();
+		// input.setValue("BDAT", dateStr);
+		// input.setValue("BTIM", timeStr);
+		input.setValue("MAXNUM", MAX_ALLOWED_RECORDS);
+		RfcManager.execute(function, index);
+		// String date = function.getExportParameterList().getString("OUTEDAT");
+		// String time = function.getExportParameterList().getString("OUTETIM");
+		JCoTable jcoTable = function.getTableParameterList().getTable("PTZXH_DATA");
+		if (!jcoTable.isEmpty()) {
+			do {
+				MasterData masterdata = new MasterData();
+				masterdata.setZxh((String) jcoTable.getValue("ZXH"));
+				masterdata.setMatnr((String) jcoTable.getValue("MATNR"));
+				masterdata.setColor((String) jcoTable.getValue("COLOR"));
+				masterdata.setZpeim((String) jcoTable.getValue("ZPEIM"));
+				masterdata.setSapsys(sysName);
+				masterdata.setZtp("");
+				list.add(masterdata);
+			} while (jcoTable.nextRow());
+		}
+		Long end = new Date().getTime();
+		int count = list.size();
+		logger.info("查询" + count + "条MasterData总耗时 : " + (end - begin) / 1000 + " ms");
+		return list;
+	}
+
+	private void addMasterData(List<MasterData> list, int index) {
+		Long begin = new Date().getTime();
+		logger.info("start to call SAP function input parameters:index:" + index);
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_MASTERDATA_CONFIRM, index);
+		if (function == null) {
+			logger.info("No function:" + SAPContant.SAP_FUNCTION_MASTERDATA_CONFIRM);
+
+			return;
+		}
+		JCoParameterList inputParam = function.getTableParameterList();
+		JCoTable jcoTable = inputParam.getTable("PTZXH");
+		for (MasterData masterData : list) {
+			jcoTable.appendRow();
+			jcoTable.setValue("ZXH", masterData.getZxh());
+		}
+		RfcManager.execute(function, index);
+
+		Long end = new Date().getTime();
+		int count = list.size();
+		logger.info("查询" + count + "条MasterData总耗时 : " + (end - begin) / 1000 + " ms");
+	}
+
+	private List<MasterData> insertMasterData(List<MasterData> list) {
+		int count = list.size();
+		int ret = 0;
+		List<MasterData> retList = new ArrayList<MasterData>();
+		Long begin = new Date().getTime();
+		List<MasterData> dataList = jobUtil.masterDataService.findMasterdata(list);
+		if (dataList != null && dataList.size() > 0) {
+			jobUtil.masterDataService.deleteMasterdata(dataList);
+		}
+		if (count <= MAX_ALLOWED_RECORDS) {
+			ret = jobUtil.masterDataService.addMasterdataList(list);
+			if (ret == count) {
+				retList = list;
+			}
+		} else {
+			retList = insertMasterDataUsingJDBC(list);
+			ret = retList.size();
+		}
+
+		Long end = new Date().getTime();
+		logger.info("总计" + count + "条,插入" + ret + "条MasterData总耗时 : " + (end - begin) / 1000 + " ms");
+		return retList;
+	}
+
+	private List<MasterData> insertMasterDataUsingJDBC(List<MasterData> list) {
+		List<MasterData> retList = new ArrayList<MasterData>();
+		// sql前缀
+		String prefix = "INSERT INTO Dusto_masterdata (zxh, matnr, color,zpeim,sapsys,flg) VALUES ";
+		String zxh = "";
+		String matnr = "";
+		String color = "";
+		String zpeim = "";
+		String sapsys = "";
+		String flg = DustoConstant.ZXH_STATUS_NO_BINDING;
+		Connection conn = MySQLConn.getConnection();
+		try {
+			// 保存sql后缀
+			StringBuffer suffix = new StringBuffer();
+			// 设置事务为非自动提交
+			conn.setAutoCommit(false);
+			// Statement st = conn.createStatement();
+			// 比起st，pst会更好些
+			PreparedStatement pst = conn.prepareStatement("");
+			int loops = list.size() / MAX_ALLOWED_RECORDS + 1;
+			// 外层循环，总提交事务次数
+			for (int i = 0; i < loops; i++) {
+				int loop = MAX_ALLOWED_RECORDS;
+				// 第次提交步长
+				if ((i + 1) == loops) {
+					loop = list.size() - i * MAX_ALLOWED_RECORDS;
+				}
+				List<MasterData> loopList = new ArrayList<MasterData>();
+				for (int j = 0; j < loop; j++) {
+					// 构建sql后缀
+					int index = i * MAX_ALLOWED_RECORDS + j;
+					MasterData data = list.get(index);
+					zxh = data.getZxh();
+					matnr = data.getMatnr();
+					color = data.getColor();
+					zpeim = data.getZpeim();
+					sapsys = data.getSapsys();
+					suffix.append("('" + zxh + "', '" + matnr + "', '" + color + "', '" + zpeim + "', '" + sapsys
+							+ "', '" + flg + "'),");
+					loopList.add(data);
+				}
+				// 构建完整sql
+				String sql = prefix + suffix.substring(0, suffix.length() - 1);
+				// 添加执行sql
+				pst.addBatch(sql);
+				// 执行操作
+				int[] rets = pst.executeBatch();
+				// 提交事务
+				conn.commit();
+				if (rets[0] == loop) {
+					retList.addAll(loopList);
+				}
+				// 清空上一次添加的数据
+				suffix = new StringBuffer();
+			}
+			// 关闭连接
+			pst.close();
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return retList;
+	}
+}

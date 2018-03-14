@@ -1,0 +1,251 @@
+package com.dusto.mobile.biz.warehouse.controller;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.alibaba.fastjson.JSON;
+import com.dusto.mobile.biz.usercenter.service.WarehouseService;
+import com.dusto.mobile.biz.warehouse.vo.req.NoneTrayTallyServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.req.TotalTrayMoveServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.req.TrayTallyServiceRequest;
+import com.dusto.mobile.common.Utils;
+import com.dusto.mobile.common.constant.DustoConstant;
+import com.dusto.mobile.common.constant.SAPContant;
+import com.dusto.mobile.common.sap.jco.RfcManager;
+import com.dusto.mobile.common.vo.BaseResponse;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
+import com.sap.conn.jco.JCoTable;
+
+/**
+ * @author lan
+ * @date 2017年4月12日
+ */
+
+@Controller
+@RequestMapping("tally")
+public class TallyController {
+
+	@Autowired
+	private WarehouseService warehouseService;
+
+	private Logger logger = Logger.getLogger(TallyController.class);
+
+	/**
+	 * 托盘区理货
+	 * 
+	 * @param req
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/tray", method = { RequestMethod.POST })
+	public BaseResponse trayTally(@RequestBody TrayTallyServiceRequest req) {
+		logger.info("entry TallyController:trayTally, input parameters:" + JSON.toJSONString(req));
+		Long begin = new Date().getTime();
+		BaseResponse res = new BaseResponse();
+
+		int index = Utils.getIndexOfWarehouse(warehouseService, req.getWarehouseId());
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit TallyController:trayTally output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_TRAY_TALLY, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit TallyController:trayTally output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		Long sapStart = new Date().getTime();
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", req.getWarehouseId());
+		input.setValue("ZTPN", req.getZtpn());
+		input.setValue("UNAME", req.getUname());
+
+		JCoParameterList inputParam = function.getTableParameterList();
+		List<String> zxhList = new ArrayList<String>();
+		if (!req.getZxhList().isEmpty()) {
+			JCoTable jcoTable = inputParam.getTable("PTZXH");
+			for (String zxh : req.getZxhList()) {
+				jcoTable.appendRow();
+				jcoTable.setValue("ZXH", zxh);
+				zxhList.add(zxh);
+			}
+		}
+
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		Long sapEnd = new Date().getTime();
+		logger.info("entry TallyController:trayTally output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",sap costs " + (sapEnd - sapStart) + " ms");
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		Long end = new Date().getTime();
+		logger.info("exit TallyController:trayTally output parameters:" + JSON.toJSONString(res) + ", service costs "
+				+ (end - begin) + " ms");
+		return res;
+	}
+
+	/**
+	 * 
+	 * 整托盘移库
+	 * 
+	 * @param req
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/totaltraymove", method = { RequestMethod.POST })
+	public BaseResponse totalTrayMove(@RequestBody TotalTrayMoveServiceRequest req) {
+		logger.info("entry totalTrayMove, input parameters:" + JSON.toJSONString(req));
+		Long begin = new Date().getTime();
+		BaseResponse res = new BaseResponse();
+		int index = Utils.getIndexOfWarehouse(warehouseService, req.getWarehouseId());
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit TallyController:totalTrayMove output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_TOTAL_TRAY_MOVE, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit TallyController:totalTrayMove output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		Long sapStart = new Date().getTime();
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", req.getWarehouseId());
+		input.setValue("ZTP", req.getZtp());
+		input.setValue("LGPLA", req.getLgpla());
+		input.setValue("UNAME", req.getUname());
+
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		Long sapEnd = new Date().getTime();
+		logger.info("entry TallyController:totalTrayMove output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",sap costs " + (sapEnd - sapStart) + " ms");
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		Long end = new Date().getTime();
+		logger.info("exit TallyController:totalTrayMove output parameters:" + JSON.toJSONString(res)
+				+ ", service costs " + (end - begin) + " ms");
+		return res;
+	}
+
+	/**
+	 * 非托盘区理货
+	 * 
+	 * @param req
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/nonetray", method = { RequestMethod.POST })
+	public BaseResponse noneTrayTally(@RequestBody NoneTrayTallyServiceRequest req) {
+		logger.info("enter TallyController:nonetraytally input parameters:" + JSON.toJSONString(req));
+		Long begin = new Date().getTime();
+		BaseResponse res = new BaseResponse();
+		int index = Utils.getIndexOfWarehouse(warehouseService, req.getWarehouseId());
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit TallyController:nonetraytally output warehouseId parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_NONE_TRAY_TALLY, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit TallyController:nonetraytally output function parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		Long sapStart = new Date().getTime();
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", req.getWarehouseId());
+		input.setValue("VLPLA", req.getVlpla());
+		input.setValue("NLPLA", req.getNlpla());
+		input.setValue("UNAME", req.getUname());
+
+		JCoParameterList inputParam = function.getTableParameterList();
+		List<String> zxhList = new ArrayList<String>();
+		logger.info("zxhList:" + req.getZxhList().size());
+
+		if (!req.getZxhList().isEmpty()) {
+			JCoTable jcoTable = inputParam.getTable("PTZXH");
+			for (String zxh : req.getZxhList()) {
+				jcoTable.appendRow();
+				jcoTable.setValue("ZXH", zxh);
+				zxhList.add(zxh);
+			}
+		}
+		JCoParameterList shoeBoxInputParam = function.getTableParameterList();
+
+		logger.info("zmxList:" + req.getZmxList().size());
+		// 处理返回上来的箱号数据集
+		HashMap<String, Integer> shoeList = new HashMap<>();
+		if (!req.getZmxList().isEmpty()) {
+			for (String zmx : req.getZmxList()) {
+				Integer count = shoeList.getOrDefault(zmx, 0);
+				count++;
+				shoeList.put(zmx, count);
+				logger.info("(deal_data TallyController:nonetraytally output parameters:)" + "zmx : " + zmx
+						+ "; count : " + count);
+			}
+		}
+
+		if (!shoeList.isEmpty()) {
+			JCoTable jcoTable = shoeBoxInputParam.getTable("PTZMX");
+			Iterator<Entry<String, Integer>> iter = shoeList.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, Integer> entry = iter.next();
+				String key = entry.getKey();
+				Integer val = entry.getValue();
+				logger.info("(deal_data TallyController:nonetraytally output parameters:)" + "key : " + key + "; val : "
+						+ String.valueOf(val));
+
+				jcoTable.appendRow();
+				jcoTable.setValue("MATNR", key);
+				jcoTable.setValue("MENGE", String.valueOf(val));
+			}
+		}
+
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		Long sapEnd = new Date().getTime();
+		logger.info("entry TallyController:nonetraytally output end parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",sap costs " + (sapEnd - sapStart) + " ms");
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		Long end = new Date().getTime();
+		logger.info("exit TallyController:nonetraytally output parameters:" + JSON.toJSONString(res)
+				+ ", service costs " + (end - begin) + " ms");
+		return res;
+	}
+
+}

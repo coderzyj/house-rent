@@ -1,0 +1,67 @@
+<h2 class="sub-header">用户列表</h2>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>用户名</th>
+                  <th>密码</th>
+                  <th>当前所在仓库</th>
+                  <th>权限</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>000304343234</td>
+                  <td>4829f7</td>
+                  <td>中央仓库</td>
+                  <td>入库，仓库，出库，查询</td>
+                  <td><a href="#" class="btn btn-primary btn-lg active" role="button">编辑</a>
+<a href="#" class="btn btn-default btn-lg active" role="button">删除</a></td>
+                </tr>
+               <tr>
+                  <td>2</td>
+                  <td>00030984384202</td>
+                  <td>782w03</td>
+                  <td>中央仓库</td>
+                  <td>入库，仓库，出库，查询</td>
+                  <td><a href="#" class="btn btn-primary btn-lg active" role="button">编辑</a>
+<a href="#" class="btn btn-default btn-lg active" role="button">删除</a></td>
+                </tr><tr>
+                  <td>3</td>
+                  <td>00083916477280</td>
+                  <td>8fs223</td>
+                  <td>中央仓库</td>
+                  <td>入库，仓库，出库，查询</td>
+                  <td><a href="#" class="btn btn-primary btn-lg active" role="button">编辑</a>
+<a href="#" class="btn btn-default btn-lg active" role="button">删除</a></td>
+                </tr><tr>
+                  <td>4</td>
+                  <td>00039381763309</td>
+                  <td>492ff7</td>
+                  <td>中央仓库</td>
+                  <td>入库，仓库，出库，查询</td>
+                  <td><a href="#" class="btn btn-primary btn-lg active" role="button">编辑</a>
+<a href="#" class="btn btn-default btn-lg active" role="button">删除</a></td>
+                </tr><tr>
+                  <td>5</td>
+                  <td>000319376482232</td>
+                  <td>4829f7</td>
+                  <td>中央仓库</td>
+                  <td>入库，仓库，出库，查询</td>
+                  <td><a href="#" class="btn btn-primary btn-lg active" role="button">编辑</a>
+<a href="#" class="btn btn-default btn-lg active" role="button">删除</a></td>
+                </tr><tr>
+                  <td>6</td>
+                  <td>00030984389361</td>
+                  <td>29jd7e</td>
+                  <td>中央仓库</td>
+                  <td>入库，仓库，出库，查询</td>
+                  <td><a href="#" class="btn btn-primary btn-lg active" role="button">编辑</a>
+<a href="#" class="btn btn-default btn-lg active" role="button">删除</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>

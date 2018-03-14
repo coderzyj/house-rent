@@ -1,0 +1,8 @@
+# MySql 
+jdbc.driver=com.mysql.jdbc.Driver
+#jdbc_driverClassName=com.mysql.jdbc.Driver
+jdbc_url=jdbc:mysql://mysql.db.dusto.biz:3306/dusto?createDatabaseIfNotExist=true&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+jdbc_username=root
+jdbc_password=root
+jdbc.initialPoolSize=5
+jdbc.maxPoolSize=10

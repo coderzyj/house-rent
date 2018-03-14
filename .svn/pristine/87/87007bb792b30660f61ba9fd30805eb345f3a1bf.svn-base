@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>用户管理</title>
+<link href="../css/main.css" rel="stylesheet">
+<script type="text/javascript" src="../js/lib/jquery-3.1.1.min.js"></script>
+<script type="text/javascript" src="../js/user_bak.js"></script>
+</head>
+<body>
+	<header style="background-color: #333333"> </header>
+	<div id="line"></div>
+	<div id="fade" class="black_overlay"></div>
+	<div class="clear"></div>
+	<section class="container">
+		<form id="form1">
+			<div class="user">
+				<ul>
+					<li>登陆用户ID</li>
+					<li>登陆用户密码</li>
+					<li>最近使用的仓库名</li>
+					<li>编辑 &nbsp; &nbsp; &nbsp;删除</li>
+				</ul>
+				<ul>
+					<li>ID</li>
+					<li>密码</li>
+					<li>仓库名</li>
+					<li>
+					<button type="button" class="btn-primary" style="float: none;"><span class="glyphicon glyphicon-trash"></span> &nbsp; 编辑</button>
+					&nbsp; &nbsp; &nbsp;  
+					<button type="button" class="btn-danger" style="float: none;"><span class="glyphicon glyphicon-trash"></span> &nbsp; 删除</button>
+					</li>
+				</ul>
+				<ul>
+					<li>ID</li>
+					<li>密码</li>
+					<li>仓库名</li>
+					<li>
+					<button type="button" class="btn-primary" style="float: none;"><span class="glyphicon glyphicon-trash"></span> &nbsp; 编辑</button>
+					&nbsp; &nbsp; &nbsp;  
+					<button type="button" class="btn-danger" style="float: none;"><span class="glyphicon glyphicon-trash"></span> &nbsp; 删除</button>
+					</li>
+				</ul>
+			</div>
+		</form>
+	</section>
+	<footer></footer>
+
+</body>
+</html>

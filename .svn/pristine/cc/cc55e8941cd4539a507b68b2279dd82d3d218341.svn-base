@@ -1,0 +1,9 @@
+# MySql 
+#jdbc.driver=com.mysql.jdbc.Driver
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://10.0.2.71:3306/dusto?characterEncoding=utf-8&useUnicode=true&autoReconnect=true&failOverReadOnly=false
+#jdbc.url=jdbc:mysql://10.0.2.71:3306/dusto?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true
+jdbc.username=dusto
+jdbc.password=dusto
+jdbc.initialPoolSize=5
+jdbc.maxPoolSize=25

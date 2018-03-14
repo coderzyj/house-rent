@@ -1,0 +1,185 @@
+package com.dusto.mobile.biz.warehouse.controller;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.alibaba.fastjson.JSON;
+import com.dusto.mobile.biz.usercenter.service.WarehouseService;
+import com.dusto.mobile.biz.warehouse.vo.req.BindingBox;
+import com.dusto.mobile.biz.warehouse.vo.req.CdcStockcheckServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.req.StockcheckServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.res.CdcStockcheckServiceResponse;
+import com.dusto.mobile.biz.warehouse.vo.res.StockcheckServiceResponse;
+import com.dusto.mobile.common.Utils;
+import com.dusto.mobile.common.constant.DustoConstant;
+import com.dusto.mobile.common.constant.SAPContant;
+import com.dusto.mobile.common.sap.jco.RfcManager;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
+import com.sap.conn.jco.JCoTable;
+
+/**
+ * 库存查询
+ * 
+ * @author CAIW
+ *
+ */
+@Controller
+@RequestMapping("stockcheck")
+public class StockcheckController {
+	private Logger logger = Logger.getLogger(StockcheckController.class);
+
+	@Autowired
+	private WarehouseService warehouseService;
+
+	@ResponseBody
+	@RequestMapping(value = "/check", method = { RequestMethod.POST })
+	public StockcheckServiceResponse stockcheck(@RequestBody StockcheckServiceRequest req) {
+		logger.info("entry StockcheckController:check, input parameters：" + JSON.toJSONString(req));
+		Long begin = new Date().getTime();
+		StockcheckServiceResponse res = new StockcheckServiceResponse();
+		String WarehouseId = req.getWarehouseId();
+		int index = Utils.getIndexOfWarehouse(warehouseService, WarehouseId);
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit StockcheckController:check output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_STOCKCHECK, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit StockcheckController:check, output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		Long sapStart = new Date().getTime();
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", WarehouseId);
+		input.setValue("LGPLA", req.getLgpla());
+		input.setValue("ZTP", req.getZtp());
+
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		Long sapEnd = new Date().getTime();
+		logger.info("exit StockcheckController:check, output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",sap costs " + (sapEnd - sapStart) + " ms");
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			JCoParameterList outputParam = function.getTableParameterList();
+			JCoTable jcoTable = outputParam.getTable("PTLQUA");
+			List<StockcheckServiceResponse> Stocklist = new ArrayList<StockcheckServiceResponse>();
+			if (!jcoTable.isEmpty()) {
+				do {
+					StockcheckServiceResponse stock = new StockcheckServiceResponse();
+					stock.setLgpla((String) jcoTable.getValue("LGPLA"));
+					stock.setZtp((String) jcoTable.getValue("ZTP"));
+					stock.setMatnr((String) jcoTable.getValue("MATNR"));
+					stock.setGesme((BigDecimal) jcoTable.getValue("GESME"));
+					stock.setMeins((String) jcoTable.getValue("MEINS"));
+					Stocklist.add(stock);
+				} while (jcoTable.nextRow());
+			}
+			res.setStocklist(Stocklist);
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		Long end = new Date().getTime();
+		logger.info("exit StockcheckController:check output parameters:" + JSON.toJSONString(res) + ", service costs "
+				+ (end - begin) + " ms");
+		return res;
+	}
+	
+	@ResponseBody
+	@RequestMapping(value = "/cdccheck", method = { RequestMethod.POST })
+	public CdcStockcheckServiceResponse cdccheck(@RequestBody CdcStockcheckServiceRequest req) {
+		logger.info("entry StockcheckController:cdccheck, input parameters：" + JSON.toJSONString(req));
+		CdcStockcheckServiceResponse res = new CdcStockcheckServiceResponse();
+		
+		String WarehouseId = req.getWarehouseId();
+		int index = Utils.getIndexOfWarehouse(warehouseService, WarehouseId);
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit StockcheckController:cdccheck output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		if (req.getZxh() != null) {
+			JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_STOCKCHECK_CDC_A, index);
+			if (function == null) {
+				res.setReturnCode(DustoConstant.RESPONSE_LOGIN_NO_WAREHOUSE);
+				logger.info("exit StockcheckController:cdccheck, output parameters:" + JSON.toJSONString(res));
+				return res;
+			}
+			JCoParameterList input = function.getImportParameterList();
+			input.setValue("LGNUM", WarehouseId);
+			input.setValue("ZXH", req.getZxh());
+			RfcManager.execute(function, index);
+			String result = function.getExportParameterList().getString("ZFLAG");
+			String errMsg = function.getExportParameterList().getString("ZMESS");
+			logger.info("entry StockcheckController:cdccheck output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg);
+			if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+				res.setZtp(function.getExportParameterList().getString("ZTP"));
+				res.setLgpla(function.getExportParameterList().getString("LGPLA"));
+				res.setZlatxt(function.getExportParameterList().getString("ZLATXT"));
+				res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+			} else {
+				res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+				res.setErrorMsg(errMsg);
+			}
+			logger.info("exit StockcheckController:cdccheck output parameters:" + JSON.toJSONString(res));
+			return res;
+		} else if ( req.getZtp() != null) {
+			JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_STOCKCHECK_CDC_B, index);
+			if (function == null) {
+				res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+				logger.info("exit StockcheckController:cdccheck, output parameters:" + JSON.toJSONString(res));
+				return res;
+			}
+			JCoParameterList input1 = function.getImportParameterList();
+			input1.setValue("LGNUM", req.getWarehouseId());
+			input1.setValue("ZTP", req.getZtp());
+			RfcManager.execute(function, index);
+			String result = function.getExportParameterList().getString("ZFLAG");
+			String errMsg = function.getExportParameterList().getString("ZMESS");
+			if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+				JCoParameterList outputParam = function.getTableParameterList();
+				JCoTable jcoTable = outputParam.getTable("PTZSZXH");
+				List<BindingBox> Zxhlist = new ArrayList<BindingBox>();
+				if (!jcoTable.isEmpty()) {
+					do {
+						BindingBox data = new BindingBox();
+						data.setZxh((String) jcoTable.getValue("ZXH"));
+						Zxhlist.add(data);
+					} while (jcoTable.nextRow());
+				}
+				while (jcoTable.nextRow());
+				res.setNum(function.getExportParameterList().getInt("NUM"));
+				res.setLgpla(function.getExportParameterList().getString("LGPLA"));
+				res.setZlatxt(function.getExportParameterList().getString("ZLATXT"));
+				res.setZxhlist(Zxhlist);
+				res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+			} else {
+				res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+				res.setErrorMsg(errMsg);
+			}
+			logger.info("exit StockcheckController:cdccheck output parameters:" + JSON.toJSONString(res));
+			return res;
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_PARAM_ERROR);
+			return res;
+		}
+
+	}
+	
+}

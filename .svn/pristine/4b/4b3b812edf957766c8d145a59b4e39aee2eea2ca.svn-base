@@ -1,0 +1,111 @@
+package com.dusto.mobile.biz.warehouse.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import com.alibaba.fastjson.JSON;
+import com.dusto.mobile.biz.usercenter.entity.Warehouse;
+import com.dusto.mobile.biz.usercenter.service.WarehouseService;
+import com.dusto.mobile.biz.warehouse.vo.req.StockcheckServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.res.StockcheckServiceResponse;
+import com.dusto.mobile.common.constant.DustoConstant;
+import com.dusto.mobile.common.constant.SAPContant;
+import com.dusto.mobile.common.sap.jco.RfcManager;
+import com.dusto.mobile.common.vo.BaseResponse;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
+import com.sap.conn.jco.JCoTable;
+
+/**
+ * 库存查询
+ * 
+ * @author CAIW
+ *
+ */
+@Controller
+@RequestMapping("stockcheck")
+public class StockcheckController {
+	private Logger logger = Logger.getLogger(InboundController.class);
+
+	@Autowired
+	private WarehouseService warehouseService;
+
+	@ResponseBody
+	@RequestMapping(value = "/check", method = { RequestMethod.POST })
+	public BaseResponse stockcheck(@RequestBody StockcheckServiceRequest req) {
+		logger.info("entry StockcheckController:stock, input parameters：" + JSON.toJSONString(req));
+		StockcheckServiceResponse res = new StockcheckServiceResponse();
+		String WarehouseId = req.getWarehouseId();
+		int index = getIndexOfWarehouse(WarehouseId);
+		if (index == -1) {
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit StockcheckController:check output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_STOCKCHECK, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit StockcheckController:check, output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", WarehouseId);
+		input.setValue("LGPLA", req.getLgpla());
+		input.setValue("ZTP", req.getZtp());
+
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		JCoParameterList outputParam = function.getTableParameterList();
+		JCoTable jcoTable = outputParam.getTable("PTLQUA");
+		List<StockcheckServiceResponse> Stocklist = new ArrayList<StockcheckServiceResponse>();
+		if (!jcoTable.isEmpty()) {
+			do {
+				StockcheckServiceResponse stock = new StockcheckServiceResponse();
+				stock.setLgpla((String) jcoTable.getValue("LGPLA"));
+				stock.setZtp((String) jcoTable.getValue("ZTP"));
+				stock.setMatnr((String) jcoTable.getValue("MATNR"));
+				stock.setGesme((BigDecimal) jcoTable.getValue("GESME"));
+				stock.setMeins((String) jcoTable.getValue("MEINS"));
+				Stocklist.add(stock);
+			} while (jcoTable.nextRow());
+		}
+		logger.info("exit StockcheckController:check, output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg
+				+ ",Stocklist.size=" + Stocklist.size());
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setStocklist(Stocklist);
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		logger.info("exit StockcheckController:check output parameters:" + JSON.toJSONString(res));
+		return res;
+	}
+
+	private int getIndexOfWarehouse(String warehouseId) {
+		if (!warehouseId.isEmpty()) {
+			Warehouse wh = warehouseService.selectByPrimaryKey(warehouseId);
+			String warehouseType = wh.getWarehouseType();
+			if ("AFS".equalsIgnoreCase(warehouseType)) {
+				logger.info("current SAP sys is AFS");
+				return RfcManager.SAP_SYS_AFS;
+			} else if ("RETAIL".equalsIgnoreCase(warehouseType)) {
+				logger.info("current SAP sys is RETAIL");
+				return RfcManager.SAP_SYS_RETAIL;
+			}
+		}
+		logger.info("current SAP sys not founds");
+		return -1;
+	}
+}

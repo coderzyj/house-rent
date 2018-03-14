@@ -1,0 +1,24 @@
+package com.dusto.mobile.biz.scheduler.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
+
+import com.dusto.mobile.biz.scheduler.vo.ScheduleJob;
+
+public interface JobMapper {
+
+	public int deleteUserByPrimaryKey(@Param(value = "jobId") String jobId);
+
+	public int addjob(ScheduleJob scheduleJob);
+
+	public int updatejob(ScheduleJob scheduleJob);
+	
+	public int updateJobStatus(@Param(value = "jobStatus") String jobStatus, @Param(value = "jobId") String jobId);
+
+	public ScheduleJob getjob(@Param(value = "jobId") String jobId);
+	
+	public List<ScheduleJob> loadjob();
+	
+	public int updateCronExpression(@Param(value = "cronExpression") String cronExpression, @Param(value = "jobId") String jobId);
+}

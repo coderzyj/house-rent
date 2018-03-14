@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dusto.mobile.biz.usercenter.dao.UserMapper">
+	<resultMap id="userMap" type="com.dusto.mobile.biz.usercenter.entity.User" autoMapping="true">
+	</resultMap>
+	<select id="getUser" resultType="com.dusto.mobile.biz.usercenter.entity.User">
+		select
+		userId,userName,password,warehouse,authority,update_date from
+		Dusto_user where userId = #{userId}
+	</select>
+
+	<select id="getUserByKeyAndPwd" resultMap="userMap">
+		select
+		userId,userName,password,warehouse,authority,update_date from
+		Dusto_user where userId = #{userId} and password = #{password}
+	</select>
+
+	<insert id="addUser" parameterType="com.dusto.mobile.biz.usercenter.entity.User"
+		useGeneratedKeys="true">
+		insert into Dusto_user
+		(userId,userName,password,warehouse,authority,update_date
+		) values
+		(#{userId},#{userName},#{password},#{warehouse},#{authority},NOW())
+	</insert>
+
+	<update id="updateUser" parameterType="com.dusto.mobile.biz.usercenter.entity.User">
+		update Dusto_user set
+		userName = #{userName},password = #{password},warehouse =
+		#{warehouse},authority = #{authority},  update_date=NOW()
+		where userId = #{userId}
+	</update>
+
+	<delete id="deleteUserByPrimaryKey">
+		delete from Dusto_user where userId = #{userId}
+	</delete>
+
+	<select id="findUserlistUsersByPage" resultMap="userMap">
+		select
+		user.userId as 'userId',user.userName as 'userName',user.password as 'password', w.warehouseName as
+		'warehouse',user.authority as 'authority', user.update_date as 'update_date' from
+		Dusto_user user
+		LEFT JOIN
+		Dusto_warehouse w ON user.warehouse = w.warehouseId
+		where 1=1 order by update_date desc limit
+		#{offset},#{rows}
+	</select>
+
+	<select id="searchByKeyword" resultMap="userMap">
+		select
+		user.userId as 'userId',user.userName as 'userName',user.password as 'password', w.warehouseName as
+		'warehouse',user.authority as 'authority', user.update_date as 'update_date' from
+		Dusto_user user
+		LEFT JOIN
+		Dusto_warehouse w ON user.warehouse = w.warehouseId where userId
+		like '%#{keyword}%' order by update_date desc
+	</select>
+
+</mapper>

@@ -1,0 +1,125 @@
+package com.dusto.mobile.biz.warehouse.controller;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.alibaba.fastjson.JSON;
+import com.dusto.mobile.biz.usercenter.entity.Warehouse;
+import com.dusto.mobile.biz.usercenter.service.WarehouseService;
+import com.dusto.mobile.biz.warehouse.vo.req.GroundingServiceRequest;
+import com.dusto.mobile.biz.warehouse.vo.res.PositionServiceResponse;
+import com.dusto.mobile.common.constant.DustoConstant;
+import com.dusto.mobile.common.constant.SAPContant;
+import com.dusto.mobile.common.sap.jco.RfcManager;
+import com.dusto.mobile.common.vo.BaseResponse;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
+/**
+ * 拣货
+ * @author Kevin
+ *
+ */
+@Controller
+@RequestMapping("pick")
+public class PickController {
+	private Logger logger = Logger.getLogger(StockController.class);
+	@Autowired
+	private WarehouseService warehouseService;
+	
+	@ResponseBody
+	@RequestMapping(value = "/post", method = { RequestMethod.POST })
+	public BaseResponse grounding(@RequestBody GroundingServiceRequest req) {
+		logger.info("entry PickController:grounding, input parameters:" + JSON.toJSONString(req));
+		BaseResponse res = new BaseResponse();
+		int index = getIndexOfWarehouse(req.getWarehouseId());
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_GROUNDING, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit StockController:grounding output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", req.getWarehouseId());
+		input.setValue("ZTP", req.getZtp());
+		input.setValue("UNAME", req.getuName());
+		input.setValue("LGPLA", req.getLgpla());
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		logger.info("entry StockController:grounding output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg);
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		logger.info("exit StockController:grounding output parameters:" + JSON.toJSONString(res));
+		return res;
+	}
+	
+	/**
+	 * 获取推荐仓位
+	 * @param req
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/positon/{warehouseId}/{ztp}", method = { RequestMethod.GET })
+	public PositionServiceResponse getPosition(@PathVariable("warehouseId") String warehouseId,@PathVariable("ztp") String ztp) {
+		logger.info("entry StockController:getPosition, input parameters: warehouseId=" + warehouseId + ",ztp="+ztp);
+		PositionServiceResponse res = new PositionServiceResponse();
+		int index = getIndexOfWarehouse(warehouseId);
+		if(index == -1){
+			res.setReturnCode(DustoConstant.RESPONSE_SYS_ERROR);
+			logger.info("exit StockController:getPosition output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		JCoFunction function = RfcManager.getFunction(SAPContant.SAP_FUNCTION_POSITION, index);
+		if (function == null) {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_NO_FUNCTION);
+			logger.info("exit StockController:getPosition output parameters:" + JSON.toJSONString(res));
+			return res;
+		}
+		JCoParameterList input = function.getImportParameterList();
+		input.setValue("LGNUM", warehouseId);
+		input.setValue("ZTP", ztp);
+		RfcManager.execute(function, index);
+		String result = function.getExportParameterList().getString("ZFLAG");
+		String errMsg = function.getExportParameterList().getString("ZMESS");
+		String lgpla = function.getExportParameterList().getString("LGPLA");
+		String matnr = function.getExportParameterList().getString("MATNR");
+		int menge = function.getExportParameterList().getInt("MENGE");
+		logger.info("entry StockController:getPosition output parameters:ZFLAG=" + result + ",ZMESS=" + errMsg);
+		if (SAPContant.SAP_FUNCTION_RES_SUCCESS.equalsIgnoreCase(result)) {
+			res.setReturnCode(DustoConstant.RESPONSE_NORMAL);
+			res.setLgpla(lgpla);
+			res.setMatnr(matnr);
+			res.setMenge(menge);
+		} else {
+			res.setReturnCode(DustoConstant.RESPONSE_SAP_ERROR);
+			res.setErrorMsg(errMsg);
+		}
+		logger.info("exit StockController:getPosition output parameters:" + JSON.toJSONString(res));
+		return res;
+	}
+	
+	
+	private int getIndexOfWarehouse(String warehouseId) {
+		Warehouse wh = warehouseService.selectByPrimaryKey(warehouseId);
+		String warehouseType = wh.getWarehouseType();
+		if ("AFS".equalsIgnoreCase(warehouseType)) {
+			logger.info("current SAP sys is AFS");
+			return RfcManager.SAP_SYS_AFS;
+		} else if ("RETAIL".equalsIgnoreCase(warehouseType)) {
+			logger.info("current SAP sys is RETAIL");
+			return RfcManager.SAP_SYS_RETAIL;
+		}
+		logger.info("current SAP sys is AFS");
+		return -1;
+	}
+}

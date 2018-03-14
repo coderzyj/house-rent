@@ -1,0 +1,41 @@
+########WMS(Retail)\u7cfb\u7edf##############
+
+#\u5f00\u53d1#IP
+#jco.client.ashost = 10.0.2.53
+#\u5f00\u53d1#\u7cfb\u7edf\u7f16\u53f7
+#jco.client.sysnr = 00
+#\u5f00\u53d1#SAP \u5ba2\u6237\u7aef 140/141/142
+#jco.client.client = 140 
+#\u5f00\u53d1#SAP\u7528\u6237\u540d 
+#jco.client.user = RFUSER
+#\u5f00\u53d1#\u5bc6\u7801
+#jco.client.passwd = 123456
+
+#\u6d4b\u8bd5#IP
+jco.client.ashost = 10.0.2.54
+#\u6d4b\u8bd5#\u7cfb\u7edf\u7f16\u53f7
+jco.client.sysnr = 00
+#\u6d4b\u8bd5#SAP \u5ba2\u6237\u7aef 540/541
+jco.client.client = 540
+#\u6d4b\u8bd5#SAP\u7528\u6237\u540d 
+jco.client.user = RFUSER
+#\u6d4b\u8bd5#\u5bc6\u7801
+jco.client.passwd = 123456
+
+#\u751f\u4ea7#IP
+#jco.client.ashost = 10.0.2.63
+#\u751f\u4ea7#\u7cfb\u7edf\u7f16\u53f7
+#jco.client.sysnr = 00
+#\u751f\u4ea7#SAP \u5ba2\u6237\u7aef
+#jco.client.client = 840
+#\u751f\u4ea7#SAP\u7528\u6237\u540d 
+#jco.client.user = RFUSER
+#\u751f\u4ea7#\u5bc6\u7801
+#jco.client.passwd = 123456
+
+#\u767b\u5f55\u8bed\u8a00 
+jco.client.lang = zh
+#\u6700\u5927\u8fde\u63a5\u6570 
+jco.destination.pool_capacity = 3
+#\u6700\u5927\u8fde\u63a5\u7ebf\u7a0b
+jco.destination.peak_limit = 10

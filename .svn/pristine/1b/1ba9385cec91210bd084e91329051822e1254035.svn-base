@@ -1,0 +1,69 @@
+package com.dusto.mobile.biz.scheduler.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dusto.mobile.biz.scheduler.dao.JobMapper;
+import com.dusto.mobile.biz.scheduler.service.ScheduleJobService;
+import com.dusto.mobile.biz.scheduler.vo.ScheduleJob;
+
+@Service("scheduleJobService")
+public class ScheduleJobServiceImpl implements ScheduleJobService {
+
+	@Resource
+	private JobMapper jobMapper;
+
+	@Override
+	public ScheduleJob selectByPrimaryKey(String jobId) {
+		if (jobId == null) {
+			return null;
+		}
+		return jobMapper.getjob(jobId);
+	}
+
+	@Override
+	@Transactional
+	public int insert(ScheduleJob scheduleJob) {
+		if (scheduleJob == null) {
+			return 0;
+		}
+		return jobMapper.addjob(scheduleJob);
+	}
+
+	@Override
+	@Transactional
+	public int delete(String jobId) {
+		if (jobId == null) {
+			return 0;
+		}
+		return jobMapper.deleteUserByPrimaryKey(jobId);
+	}
+
+	@Override
+	@Transactional
+	public int update(ScheduleJob scheduleJob) {
+		if (scheduleJob == null) {
+			return 0;
+		}
+		return jobMapper.updatejob(scheduleJob);
+	}
+
+	@Override
+	public List<ScheduleJob> loadjob() {
+		return jobMapper.loadjob();
+	}
+
+	@Override
+	@Transactional
+	public int updateJobStatus(String jobStatus, String jobId) {
+		if (jobId == null) {
+			return 0;
+		}
+		return jobMapper.updateJobStatus(jobStatus, jobId);
+	}
+
+}
